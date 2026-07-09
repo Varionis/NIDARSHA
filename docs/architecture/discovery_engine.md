@@ -84,30 +84,18 @@ The important boundary is this:
 
 ## High-Level Architecture
 
-```mermaid
-flowchart TD
-    A[Source Registry<br/>Google Sheet or CSV export] --> B[RegistryReader]
-    B --> C[SourceValidator]
-    C --> D[URLCanonicalizer]
-    D --> E[CrawlStrategyResolver]
-    E --> F[DiscoveryCrawler]
-    F --> G[PageFetcher<br/>HTTP or Playwright]
-    G --> H[LinkExtractor]
-    G --> I[Content Classifier]
-    H --> I
-    I --> J[DiscoveryManifest]
-    J --> K[FileManifestPublisher]
-    J --> L[GoogleSheetsManifestPublisher]
+The Discovery Engine is a deterministic discovery pipeline that transforms a registry of trusted government sources into a structured manifest of discoverable resources.
 
-    M[Tracing Context<br/>run_id] --> B
-    M --> C
-    M --> F
-    M --> J
-    N[Structured Logging] --> B
-    N --> F
-    N --> K
-    N --> L
-```
+Each source progresses through a fixed sequence of validation, crawling, classification, and manifest generation. Every stage produces deterministic outputs, propagates a shared `run_id` for traceability, and emits structured logs for operational visibility.
+
+The architecture separates the operational workflow (Google Sheets) from the system of record (JSON manifest). The manifest preserves complete discovery metadata and parent-child relationships, while the Google Sheet provides a lightweight operational view for review, tracking, and idempotent updates.
+
+The current implementation performs landing-page discovery only. Recursive crawling, document downloading, content extraction, and knowledge graph construction are handled by downstream components of the Nidarsha pipeline.
+
+> **Figure 1.** Discovery Engine architecture showing the end-to-end discovery
+> pipeline, persistence layer, and cross-cutting concerns.
+
+![Figure 1.](../../assets/discovery_engine_arch.png)
 
 ## Component Diagram
 
@@ -578,23 +566,14 @@ Typical failure categories:
 The runtime entrypoint allows these failures to surface clearly so the run can
 stop rather than silently producing partial output.
 
-## Current Operational Flow
+## Runtime Execution
 
-The system currently behaves as follows in a normal run:
+The architecture diagram describes the logical flow of the Discovery Engine.
+During execution, `scripts/run_discovery.py` orchestrates the same pipeline,
+instantiating the Registry Reader, Discovery Engine, publishers, logging, and
+tracing components before executing a discovery run.
 
-1. Load config from environment and `.env`.
-2. Read source registry rows.
-3. Filter disabled sources.
-4. Create a discovery run context.
-5. For each active source:
-   - canonicalize the landing page URL
-   - fetch the landing page
-   - create a root manifest
-   - extract page links when crawl depth allows
-   - classify each discovered link
-   - create child manifests
-6. Write the full manifest set to local JSON.
-7. Append the compact operational rows to Google Sheets.
+The execution order mirrors the architecture shown in Figure 1.
 
 ## What Is Stable Today
 
