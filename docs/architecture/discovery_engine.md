@@ -2,36 +2,9 @@
 
 ## Purpose
 
-The Discovery Engine is the first operational stage of the Nidarsha pipeline.
-It reads the source registry, validates and normalizes active sources, fetches
-the source landing page, extracts discovered links, classifies each discovered
-resource, and emits deterministic manifest records for downstream use.
+The Discovery Engine is the first operational stage of the Nidarsha pipeline. It reads the source registry, validates and normalizes active sources, fetches the source landing page, extracts discovered links, classifies each discovered resource, and emits deterministic manifest records for downstream use.
 
-This stage now does real discovery work. It is not only a registry reader or a
-schema validator. The current implementation crawls each enabled source using a
-strategy-specific fetcher and produces manifest records for the landing page and
-for each discovered link on that page.
-
-## Current Runtime Flow
-
-The current executable entrypoint is `scripts/run_discovery.py`.
-
-At runtime it performs the following sequence:
-
-1. Load `.env` values into the process environment if present.
-2. Load typed settings from environment variables.
-3. Require `NIDARSHA_REGISTRY_SHEET_URL`.
-4. Build a `RegistryReader` with registry settings and discovery settings.
-5. Build a `DiscoveryEngine`.
-6. Build a local JSON `FileManifestPublisher`.
-7. Optionally build a `GoogleSheetsManifestPublisher` if `NIDARSHA_DISCOVERY_SHEET_URL` is configured.
-8. Execute `DiscoveryEngine.discover()`.
-9. Write the full manifest set to a local JSON artifact.
-10. Append a compact row set to Google Sheets if configured.
-11. Print a concise summary to stdout.
-
-The local artifact is the full discovery record. The sheet is the operational
-review surface.
+This stage now does real discovery work. It is not only a registry reader or a schema validator. The current implementation crawls each enabled source using a strategy-specific fetcher and produces manifest records for the landing page and for each discovered link on that page.
 
 ## Responsibilities
 
@@ -92,28 +65,29 @@ The architecture separates the operational workflow (Google Sheets) from the sys
 
 The current implementation performs landing-page discovery only. Recursive crawling, document downloading, content extraction, and knowledge graph construction are handled by downstream components of the Nidarsha pipeline.
 
-> **Figure 1.** Discovery Engine architecture showing the end-to-end discovery
-> pipeline, persistence layer, and cross-cutting concerns.
+> **Figure 1.** High-level architecture of the Discovery Engine illustrating the deterministic discovery pipeline, persistence layer, and cross-cutting operational concerns.
 
 ![Figure 1.](../../assets/discovery_engine_arch.png)
 
-## Component Diagram
+## Runtime Component Composition
 
 ```text
 scripts/run_discovery.py
-    -> load_config
-    -> RegistryReader
-    -> DiscoveryEngine
-        -> trace_run
-        -> load_sources
-        -> DiscoveryCrawler
-            -> CrawlStrategyResolver
-            -> HTTPPageFetcher | PlaywrightPageFetcher
-            -> LinkExtractor
-            -> URLCanonicalizer
-            -> DiscoveryManifest.create
-        -> FileManifestPublisher
-        -> GoogleSheetsManifestPublisher
+│
+├── Load Configuration
+├── RegistryReader
+├── DiscoveryEngine
+│   ├── trace_run()
+│   ├── load_sources()
+│   ├── DiscoveryCrawler
+│   │   ├── CrawlStrategyResolver
+│   │   ├── HTTPPageFetcher
+│   │   ├── PlaywrightPageFetcher
+│   │   ├── LinkExtractor
+│   │   ├── URLCanonicalizer
+│   │   └── DiscoveryManifest.create()
+│   ├── FileManifestPublisher
+│   └── GoogleSheetsManifestPublisher
 ```
 
 ## Configuration Model
@@ -604,7 +578,7 @@ The architecture remains modular so later phases can add:
 - queue-based execution
 - metrics and dashboards
 
-## Near-Term Roadmap
+## ## Future Evolution
 
 The current implementation is enough to support discovery and operational
 review. The next natural additions are:
@@ -614,4 +588,3 @@ review. The next natural additions are:
 - manifest versioning
 - sheet schema migration support
 - download and extraction pipeline integration
-

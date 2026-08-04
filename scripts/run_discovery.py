@@ -60,7 +60,7 @@ def main() -> int:
     engine = DiscoveryEngine(registry_reader=reader, config=cfg)
     publisher = FileManifestPublisher(cfg.discovery.manifest_output_dir)
     sheets_publisher = None
-    if cfg.registry.discovery_sheet_url:
+    if cfg.registry.publish_discovery_sheet and cfg.registry.discovery_sheet_url:
         sheets_publisher = GoogleSheetsManifestPublisher(
             sheet_url=cfg.registry.discovery_sheet_url,
             registry_settings=cfg.registry,

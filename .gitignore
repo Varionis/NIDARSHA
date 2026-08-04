@@ -1,0 +1,9 @@
+__py**
+.pytest**
+.nidarsha_venv/
+.env
+credentials/
+artifacts/
+
+logs/
+notebooks/

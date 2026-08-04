@@ -79,3 +79,28 @@ The initial milestones include:
 5. Deploying an open-source MVP focused on Indian MSME policies.
 
 ---
+
+# Discovery Container
+
+The discovery engine can run locally through:
+
+```bash
+python scripts/run_discovery.py
+```
+
+The main container pathway is Docker Compose:
+
+```bash
+docker compose run --rm discovery
+```
+
+For a local container smoke run that skips Google Sheets publishing:
+
+```bash
+docker compose run --rm -e NIDARSHA_PUBLISH_GOOGLE_SHEETS=false discovery
+```
+
+The Compose service mounts local `artifacts/`, `logs/`, and `credentials/`
+directories into the container. Keep `.env` and Google service-account files
+outside git. Set `NIDARSHA_PUBLISH_GOOGLE_SHEETS=false` for smoke runs that
+should write only local manifest artifacts.

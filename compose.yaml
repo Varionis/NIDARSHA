@@ -1,0 +1,19 @@
+name: nidarsha
+
+services:
+  discovery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nidarsha-discovery:local
+    env_file:
+      - .env
+    environment:
+      PYTHONPATH: /app/src
+      NIDARSHA_LOG_DIR: /app/logs
+      NIDARSHA_MANIFEST_OUTPUT_DIR: /app/artifacts/discovery
+    volumes:
+      - ./artifacts:/app/artifacts
+      - ./logs:/app/logs
+      - ./credentials:/app/credentials:ro
+    command: ["python", "scripts/run_discovery.py"]

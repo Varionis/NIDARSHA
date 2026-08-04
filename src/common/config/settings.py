@@ -54,6 +54,7 @@ class RegistrySettings:
 
     sheet_url: str | None = None
     discovery_sheet_url: str | None = None
+    publish_discovery_sheet: bool = True
     service_account_file: Path | None = None
     scopes: tuple[str, ...] = (
         "https://www.googleapis.com/auth/spreadsheets",
@@ -112,8 +113,16 @@ def load_config() -> AppConfig:
     registry_settings = RegistrySettings(
         sheet_url=os.getenv("NIDARSHA_REGISTRY_SHEET_URL") or None,
         discovery_sheet_url=os.getenv("NIDARSHA_DISCOVERY_SHEET_URL") or None,
+        publish_discovery_sheet=_env_bool("NIDARSHA_PUBLISH_GOOGLE_SHEETS", default=True),
         service_account_file=Path(os.getenv("NIDARSHA_GOOGLE_SERVICE_ACCOUNT_FILE")) if os.getenv("NIDARSHA_GOOGLE_SERVICE_ACCOUNT_FILE") else None,
         scopes=registry_scopes,
     )
 
     return AppConfig(logging=logging_settings, discovery=discovery_settings, registry=registry_settings)
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes"}
